@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CifradoServiceTest {
 
@@ -24,5 +25,24 @@ class CifradoServiceTest {
         String contenido = "Nota de sesión";
 
         assertNotEquals(cifradoService.cifrar(contenido), cifradoService.cifrar(contenido));
+    }
+
+    @Test
+    void enLaNubeNoArrancaSinClave() {
+        assertThrows(IllegalStateException.class, () -> new CifradoService("", false));
+    }
+
+    @Test
+    void rechazaUnaClaveQueNoEsDe32Bytes() {
+        String claveCorta = java.util.Base64.getEncoder().encodeToString("corta".getBytes());
+        assertThrows(IllegalStateException.class, () -> new CifradoService(claveCorta, false));
+    }
+
+    @Test
+    void conUnaClaveRealCifraYDescifra() {
+        byte[] bytes = new byte[32];
+        new java.security.SecureRandom().nextBytes(bytes);
+        CifradoService real = new CifradoService(java.util.Base64.getEncoder().encodeToString(bytes), false);
+        assertEquals("nota", real.descifrar(real.cifrar("nota")));
     }
 }
